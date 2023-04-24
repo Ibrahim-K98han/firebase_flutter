@@ -17,7 +17,7 @@ class _BookListScreenState extends State<BookListScreen> {
   @override
   void initState() {
     super.initState();
-    getAllBooks();
+   // getAllBooks();
   }
 
   Future<void> getAllBooks() async {
@@ -27,12 +27,7 @@ class _BookListScreenState extends State<BookListScreen> {
     await firebaseFirestore.collection('books').get().then((documents) {
       for (var doc in documents.docs) {
         books.add(
-            Book(
-                doc.get('book_name'),
-                doc.get('writter'),
-                doc.get('year')
-            )
-        );
+            Book(doc.get('book_name'), doc.get('writter'), doc.get('year')));
       }
     });
     _getBooksInProgress = false;
@@ -45,15 +40,26 @@ class _BookListScreenState extends State<BookListScreen> {
       appBar: AppBar(
         title: const Text('Book Collection'),
       ),
-      body: _getBooksInProgress
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
-          : RefreshIndicator(
-              onRefresh: () async {
-                getAllBooks();
-              },
-              child: ListView.builder(
+      body: StreamBuilder<QuerySnapshot>(
+          stream: firebaseFirestore.collection('books').snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+            if (snapshot.hasError) {
+              return Center(
+                child: Text(snapshot.error.toString()),
+              );
+            }
+            if (snapshot.hasData) {
+              books.clear();
+              for (var doc in snapshot.data!.docs) {
+                books.add(Book(
+                    doc.get('book_name'), doc.get('writter'), doc.get('year')));
+              }
+              return ListView.builder(
                 itemCount: books.length,
                 itemBuilder: (context, index) {
                   return ListTile(
@@ -62,8 +68,13 @@ class _BookListScreenState extends State<BookListScreen> {
                     trailing: Text(books[index].year),
                   );
                 },
-              ),
-            ),
+              );
+            } else {
+              return Center(
+                child: Text('No data availabel'),
+              );
+            }
+          }),
     );
   }
 }
