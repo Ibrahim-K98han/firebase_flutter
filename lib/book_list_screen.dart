@@ -1,7 +1,43 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'books_model.dart';
 
-class BookListScreen extends StatelessWidget {
+class BookListScreen extends StatefulWidget {
   const BookListScreen({Key? key}) : super(key: key);
+
+  @override
+  State<BookListScreen> createState() => _BookListScreenState();
+}
+
+class _BookListScreenState extends State<BookListScreen> {
+  FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
+  List<Book> books = [];
+  bool _getBooksInProgress = false;
+
+  @override
+  void initState() {
+    super.initState();
+    getAllBooks();
+  }
+
+  Future<void> getAllBooks() async {
+    _getBooksInProgress = true;
+    setState(() {});
+    books.clear();
+    await firebaseFirestore.collection('books').get().then((documents) {
+      for (var doc in documents.docs) {
+        books.add(
+            Book(
+                doc.get('book_name'),
+                doc.get('writter'),
+                doc.get('year')
+            )
+        );
+      }
+    });
+    _getBooksInProgress = false;
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -9,16 +45,25 @@ class BookListScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Book Collection'),
       ),
-      body: ListView.builder(
-        itemCount: 20,
-        itemBuilder: (context, index){
-          return ListTile(
-            title: Text('Title'),
-            subtitle: Text('Writter'),
-            trailing: Text('1990'),
-          );
-        },
-      ),
+      body: _getBooksInProgress
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : RefreshIndicator(
+              onRefresh: () async {
+                getAllBooks();
+              },
+              child: ListView.builder(
+                itemCount: books.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    title: Text(books[index].name),
+                    subtitle: Text(books[index].authorName),
+                    trailing: Text(books[index].year),
+                  );
+                },
+              ),
+            ),
     );
   }
 }
