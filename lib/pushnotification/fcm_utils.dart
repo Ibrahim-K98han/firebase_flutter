@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'package:firebase/main.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 class FCMUtils {
@@ -14,12 +15,12 @@ class FCMUtils {
         provisional: false,
         sound: true);
     RemoteMessage? message =
-        await FirebaseMessaging.instance.getInitialMessage();
+    await FirebaseMessaging.instance.getInitialMessage();
     if (message != null) {
       messageHandler(message);
     }
     FirebaseMessaging.onMessage.listen(messageHandler);
-    FirebaseMessaging.onBackgroundMessage(messageHandler);
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
     getToken();
     listenToTopic();
   }
@@ -28,13 +29,13 @@ class FCMUtils {
     log(message.notification?.title ?? 'Null title');
     log(message.notification?.body ?? 'Null body');
   }
-  
-  Future<void> getToken()async{
-    final String? token =  await _firebaseMessaging.getToken();
+
+  Future<void> getToken() async {
+    final String? token = await _firebaseMessaging.getToken();
     log(token ?? '');
   }
 
-  Future<void> listenToTopic()async{
+  Future<void> listenToTopic() async {
     await _firebaseMessaging.subscribeToTopic('ibrahim');
   }
 }
