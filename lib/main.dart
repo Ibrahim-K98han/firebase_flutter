@@ -1,11 +1,13 @@
 import 'package:firebase/book_list_screen.dart';
 import 'package:firebase/home_screen.dart';
+import 'package:firebase/pushnotification/fcm_utils.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 Future<void> main() async{
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await FCMUtils().initialize();
   runApp(const MyApp());
 }
 
